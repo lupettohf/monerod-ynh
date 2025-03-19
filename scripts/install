@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Source YunoHost helpers
+source /usr/share/yunohost/helpers
+
+#=================================================
+# RETRIEVE INSTALLATION PARAMETERS
+#=================================================
+app="monerod"
+# Values from manifest install questions
+data_dir="$data_dir"        # e.g. /home/yunohost.app/monerod (user-provided or default)
+p2p_port="$p2p_port"        # e.g. 18080
+rpc_port="$rpc_port"        # e.g. 18081
+pruned="$pruned"            # "true"/"false" (boolean choice)
+
+# YunoHost should have installed required packages and created the app user.
+
+#=================================================
+# SETUP DIRECTORIES AND PERMISSIONS
+#=================================================
+install_dir="/opt/yunohost/$app"            # where we'll install monerod binaries
+ynh_script_progression --message="Creating install directory at $install_dir"
+mkdir -p "$install_dir"
+# Ensure app user owns install and data directories
+chown -R "$app:$app" "$install_dir"
+mkdir -p "$data_dir"
+chown -R "$app:$app" "$data_dir"
+# Save these as app settings for future reference
+yunohost app setting $app install_dir -v "$install_dir" --quiet
+yunohost app setting $app data_dir -v "$data_dir" --quiet
+
+#=================================================
+# BUILD MONEROD FROM SOURCE
+#=================================================
+ynh_script_progression --message="Downloading Monero source code"
+tmp_dir="$(mktemp -d)"
+# Clone the Monero repository (with submodules) at the specified release tag
+git clone --recursive --branch v0.18.3.4 https://github.com/monero-project/monero.git "$tmp_dir" 
+if [ ! -e "$tmp_dir/Makefile" ]; then
+    ynh_die "Failed to retrieve Monero source code."
+fi
+
+ynh_script_progression --message="Compiling Monero (this may take a while)..."
+cd "$tmp_dir"
+make clean || true   # clean any previous build artifacts
+# Build in release mode with all available CPU cores
+make -j$(nproc) release
+
+# Copy the compiled monerod binary (and related CLI tools) to the install directory
+build_dir="$(find $tmp_dir/build -type d -name "release" -print -quit)"
+cp -a "$build_dir/bin/"* "$install_dir"/
+# Optionally strip symbols to reduce size
+strip "$install_dir/monerod" 2>/dev/null || true
+
+# Set ownership to app user
+chown -R "$app:$app" "$install_dir"
+
+#=================================================
+# CONFIGURE SYSTEMD SERVICE
+#=================================================
+ynh_script_progression --message="Configuring Monerod service"
+# Prepare systemd service with placeholders replaced by actual values
+# The conf/systemd.service template will use __INSTALL_DIR__, __DATA_DIR__, __P2P_PORT__, __RPC_PORT__, __APP__ etc.
+ynh_config_add_systemd --service="$app"
+
+# Open P2P port in the firewall for public access&#8203;:contentReference[oaicite:12]{index=12} 
+yunohost firewall allow --no-upnp TCP "$p2p_port" 
+
+# Start the Monerod service
+ynh_systemctl start
+ynh_script_progression --message="Monerod service started"
+
+# Finalize
+ynh_print_INFO "Monero node installed. It will run as a service and sync the blockchain at $data_dir."

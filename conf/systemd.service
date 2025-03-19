@@ -1,0 +1,21 @@
+[Unit]
+Description=Monero Daemon
+After=network.target
+
+[Service]
+# Run as the dedicated app user for security;
+User=__APP__
+Group=__APP__
+Type=simple
+# Monerod runs in non-interactive mode, storing blockchain in __DATA_DIR__
+ExecStart=__INSTALL_DIR__/monerod \
+ --non-interactive \
+ --data-dir __DATA_DIR__ \
+ --p2p-bind-ip 0.0.0.0 --p2p-bind-port __P2P_PORT__ \
+ --rpc-bind-ip 127.0.0.1 --rpc-bind-port __RPC_PORT__ \
+__PRUNE_OPTION__
+# If pruned mode selected, __PRUNE_OPTION__ will be "--prune-blockchain", otherwise empty.
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

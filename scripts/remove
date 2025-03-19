@@ -1,0 +1,26 @@
+#!/bin/bash
+source /usr/share/yunohost/helpers
+app="monerod"
+
+ynh_print_INFO "Removing Monerod..."
+
+# Stop and disable the systemd service
+ynh_systemctl stop || true
+ynh_config_remove_systemd "$app"
+
+# Close the firewall port
+p2p_port="$(yunohost app setting $app p2p_port --output-as plain)"
+if [[ -n "$p2p_port" ]]; then
+    yunohost firewall deny TCP "$p2p_port" --quiet || true
+fi
+
+# Remove installed files and directories
+install_dir="$(yunohost app setting $app install_dir --output-as plain)"
+rm -rf "$install_dir"
+
+# (Do not delete the blockchain data unless purge is requested)
+data_dir="$(yunohost app setting $app data_dir --output-as plain)"
+echo "Monero blockchain data at $data_dir is not removed by default."
+echo "You can delete it manually if you no longer need the blockchain data."
+
+ynh_print_INFO "Monerod has been uninstalled."

@@ -1,0 +1,41 @@
+#!/bin/bash
+# Source helpers and get current settings
+source /usr/share/yunohost/helpers
+app="monerod"
+install_dir="$(yunohost app setting $app install_dir --output-as plain)"
+data_dir="$(yunohost app setting $app data_dir --output-as plain)"
+p2p_port="$(yunohost app setting $app p2p_port --output-as plain)"
+rpc_port="$(yunohost app setting $app rpc_port --output-as plain)"
+pruned="$(yunohost app setting $app pruned --output-as plain)"
+
+ynh_print_INFO "Upgrading Monerod to the latest version..."
+
+# Stop the running service before upgrade
+ynh_systemctl --service="$app" --action="stop"
+
+# Backup current binaries (just in case)
+cp -a "$install_dir" "$install_dir.bak" || true
+
+# Fetch and compile the new Monero version (similar to install)
+tmp_dir="$(mktemp -d)"
+git clone --recursive https://github.com/monero-project/monero.git "$tmp_dir"
+cd "$tmp_dir"
+# (Optionally checkout a specific newer release tag if known)
+# git checkout v0.18.x.x
+
+make -j$(nproc) release
+new_build_dir="$(find $tmp_dir/build -type d -name release -print -quit)"
+if [ ! -d "$new_build_dir" ]; then
+    ynh_die "Monerod upgrade failed: build directory not found."
+fi
+
+# Replace old binaries with new ones
+cp -a "$new_build_dir/bin/"* "$install_dir"/
+chown -R "$app:$app" "$install_dir"
+
+# Restart the service with the new binary
+ynh_systemctl start
+ynh_print_INFO "Monerod upgraded and service restarted."
+
+# Clean up
+rm -rf "$tmp_dir"
