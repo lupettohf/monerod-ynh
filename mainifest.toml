@@ -1,0 +1,72 @@
+# Basic app metadata
+packaging_format = 2
+id = "monerod"
+name = "Monero Daemon (monerod)"
+description.en = "Monero cryptocurrency full node daemon"
+version = "0.18.3.4~ynh1"  # Upstream version ~ynh build
+
+maintainers = ["lupettohf"]
+
+[upstream]
+license = "BSD-3-Clause"
+website = "https://www.getmonero.org"
+code = "https://github.com/monero-project/monero"
+userdoc = "https://www.getmonero.org/resources/user-guides/running-a-node.html"
+
+[integration]
+yunohost = ">= 11.0"
+architectures = ["amd64", "arm64", "armhf"]  # supported architectures
+multi_instance = false
+# Monerod has no web interface or SSO integration
+ldap = "not_relevant"
+sso = "not_relevant"
+# Estimated resources (Monero is resource-intensive)
+disk = "80G"
+ram = "2G"
+
+# Installation questions for user configuration
+[install]
+  [install.data_dir]
+  ask.en = "Path to store Monero blockchain data? (Pruned ~ 80Gb, Full 400+Gb)"
+  help.en = "Defaults to /home/yunohost.app/monerod (use an external drive path if needed)."
+  type = "string"
+  default = "/home/yunohost.app/monerod"
+
+  [install.p2p_port]
+  ask.en = "Peer-to-peer network port for Monero (P2P)?"
+  help.en = "Default 18080. Peers connect via this port."
+  type = "number"
+  default = 18080
+
+  [install.rpc_port]
+  ask.en = "RPC port for local wallet connections?"
+  help.en = "Default 18081 (bound to localhost by default)."
+  type = "number"
+  default = 18081
+
+  [install.pruned]
+  ask.en = "Enable pruned blockchain mode (reduce storage usage)?"
+  help.en = "Pruning saves space but only stores recent blockchain data."
+  type = "boolean"
+  default = false
+
+# Dependencies and source code resources
+[resources]
+
+  # APT package dependencies for building Monero&#8203;:contentReference[oaicite:3]{index=3}
+  [resources.apt]
+  packages = [
+    "build-essential", "cmake", "pkg-config", "git", 
+    "libboost-all-dev", "libssl-dev", "libzmq3-dev", "libunbound-dev", 
+    "libsodium-dev", "libunwind8-dev", "liblzma-dev", "libreadline6-dev", 
+    "libldns-dev", "libexpat1-dev", "doxygen", "graphviz", 
+    "libpgm-dev", "qttools5-dev-tools", "libhidapi-dev", "libusb-1.0-0-dev", 
+    "libprotobuf-dev", "protobuf-compiler", "libudev-dev", "ccache", "libgtest-dev"
+  ]
+
+  # (Optional) Source code archive – using GitHub release tarball
+  [resources.sources]
+    [resources.sources.main]
+    url = "https://github.com/monero-project/monero/archive/refs/tags/v0.18.3.4.tar.gz"
+    sha256 = "f5a3dcf2b0013127e7de115b5e61aa70aeed77945a5194643022fe2a7fabbdc9"  # (Placeholder for actual checksum)
+    # Note: We clone submodules in script since tarball might omit them
