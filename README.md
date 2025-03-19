@@ -1,4 +1,3 @@
-```markdown
 # Monerod YunoHost App Package
 
 This repository contains a YunoHost-compliant app package for installing and running the Monero daemon (`monerod`) from source. It builds monerod from the official Monero repository and lets administrators configure key settings such as the blockchain data directory, network ports, and whether to enable pruned mode. The package integrates seamlessly with YunoHost’s app management system for service control, firewall configuration, and upgrade/uninstall handling.
@@ -94,6 +93,8 @@ Contributions are welcome! If you have suggestions or improvements:
 3. Commit your changes with clear commit messages.
 4. Open a pull request describing your changes.
 
+Optionally you can donate some XMR to `8ALb1bnJRE1WUy7A5h6KdjSTTqEdXfmq5VVJ7DKKK1uWbvoEp73rbJ2fiw3b2mafxfMLktDdwCJkkjgQzB44Ldbe62v2NJ1` if you found this useful.
+
 ## License
 
 This project is licensed under the MIT License, Monero is under the BSD-3-Clause license. See the [LICENSE](LICENSE) file for details.
@@ -103,7 +104,3 @@ This project is licensed under the MIT License, Monero is under the BSD-3-Clause
 - [Monero Project](https://www.getmonero.org) for the Monero source code and build instructions.
 - [YunoHost](https://yunohost.org) for providing a robust framework for packaging and managing self-hosted applications.
 - The YunoHost community for their continuous support and contributions.
-
-```
-
-This README provides an overview of the package, detailed instructions for installation, and guidance for future upgrades or contributions. Enjoy running your Monero node with YunoHost!
